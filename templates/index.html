@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Study Planner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <p class="eyebrow">STUDENT TOOLKIT</p>
+      <h1>Study Planner</h1>
+      <p>Turn deadlines into a plan you can actually follow.</p>
+    </header>
+
+    <section class="stats" aria-label="Task summary">
+      <article class="stat"><span>Total tasks</span><strong>{{ totals["task_count"] }}</strong></article>
+      <article class="stat"><span>Minutes remaining</span><strong>{{ totals["remaining_minutes"] }}</strong></article>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <section class="messages" aria-live="polite">
+          {% for category, message in messages %}
+            <p class="message {{ category }}">{{ message }}</p>
+          {% endfor %}
+        </section>
+      {% endif %}
+    {% endwith %}
+
+    <section class="panel">
+      <h2>Add a study task</h2>
+      <form action="{{ url_for('add_task') }}" method="post" class="task-form">
+        <label>Task title<input name="title" maxlength="120" required placeholder="Review recursion"></label>
+        <label>Course<input name="course" maxlength="40" required placeholder="CSI2510"></label>
+        <label>Due date<input name="due_date" type="date" min="{{ today }}" required></label>
+        <label>Estimated minutes<input name="estimated_minutes" type="number" min="1" max="1440" required value="45"></label>
+        <button type="submit">Add task</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><h2>Your tasks</h2><span>{{ tasks|length }} shown</span></div>
+      {% if tasks %}
+        <div class="task-list">
+          {% for task in tasks %}
+            <article class="task {% if task['completed'] %}completed{% endif %}">
+              <div class="task-main">
+                <div class="task-title">{{ task["title"] }}</div>
+                <div class="task-meta">{{ task["course"] }} · Due {{ task["due_date"] }} · {{ task["estimated_minutes"] }} min</div>
+              </div>
+              <div class="actions">
+                {% if not task["completed"] %}
+                  <form action="{{ url_for('complete_task', task_id=task['id']) }}" method="post">
+                    <button class="secondary" type="submit">Complete</button>
+                  </form>
+                {% else %}<span class="done-label">Completed</span>{% endif %}
+                <form action="{{ url_for('delete_task', task_id=task['id']) }}" method="post">
+                  <button class="danger" type="submit" aria-label="Delete {{ task['title'] }}">Delete</button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty">No tasks yet. Add your first task above.</p>
+      {% endif %}
+    </section>
+    <footer>Built with Flask, SQLite, HTML, and CSS.</footer>
+  </main>
+</body>
+</html>
